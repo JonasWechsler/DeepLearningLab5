@@ -9,6 +9,7 @@ For our project, we are going to train a convolutional neural net with the CIFAR
 ## Project Outline
 
 https://www.tensorflow.org/tutorials/deep_cnn
+
 http://rodrigob.github.io/are_we_there_yet/build/classification_datasets_results.html
 
 * Use tensorflow
