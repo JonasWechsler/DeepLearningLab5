@@ -17,11 +17,11 @@ http://rodrigob.github.io/are_we_there_yet/build/classification_datasets_results
 * Pretrain with autoencoder or RBM
 * CIFAR-10
 * Max pooling?
-* Try some shit from papers
+* Try some stuff from papers
 * https://arxiv.org/abs/1412.6071
 * https://arxiv.org/pdf/1412.6806.pdf
     * Alternating convolution and max-pooling layers followed by a small number of fully connected layers. 
-* max-pooling can simply be replaced by a convolutional layer with increased stride without loss in accuracy on several image recognition benchmarks.
+    * max-pooling can simply be replaced by a convolutional layer with increased stride without loss in accuracy on several image recognition benchmarks.
 * https://arxiv.org/abs/1511.06422
     * First, pre-initialize weights of each convolution or inner-product layer with orthonormal matrices. Second, proceed from the first to the final layer, normalizing the variance of the output of each layer to be equal to one
 
