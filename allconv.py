@@ -10,6 +10,7 @@ from keras import backend as K
 from keras.models import Model
 from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint
+from lsuv_init import LSUVinit
 import os
 import pandas
 import numpy as np
@@ -72,6 +73,8 @@ def make_model(weights):
 
 model = make_model("weights.hdf5")
 
+batch_size = 1024
+model = LSUVinit(model, X_train[:batch_size,:,:,:])
 
 print(model.summary())
 
