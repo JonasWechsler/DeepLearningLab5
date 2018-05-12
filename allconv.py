@@ -1,7 +1,8 @@
 from __future__ import print_function
 import tensorflow as tf
 from keras.datasets import cifar10
-from keras.preprocessing.image import ImageDataGenerator
+#from keras.preprocessing.image import ImageDataGenerator
+from image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Dropout, Activation, Convolution2D, GlobalAveragePooling2D, merge
 from keras.utils import np_utils
@@ -10,6 +11,7 @@ from keras import backend as K
 from keras.models import Model
 from keras.layers.core import Lambda
 from keras.callbacks import ModelCheckpoint
+from lsuv_init import LSUVinit
 import os
 import pandas
 import numpy as np
@@ -40,12 +42,14 @@ def make_model(weights):
     model.add(GlobalAveragePooling2D())
     model.add(Activation('softmax'))
     sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
-    sgd = SGD(lr=0.01, decay=0.001, momentum=0.9)
+    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9)
 
     #if os.path.isfile(weights):
     #    print("loading weights from checkpoint")
     #    model.load_weights(weights)
     
+    batch_size = 32
+    model = LSUVinit(model, X_train[:batch_size,:,:,:])
     model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
     return model
 
@@ -66,11 +70,12 @@ def load_data():
 
 def preprocess_dataset(X,Y,batches):
     datagen = ImageDataGenerator(
+            contrast_stretching=True, adaptive_equalization=True, histogram_equalization=True,
             featurewise_center=False,  # set input mean to 0 over the dataset
             samplewise_center=False,  # set each sample mean to 0
             featurewise_std_normalization=False,  # divide inputs by std of the dataset
             samplewise_std_normalization=False,  # divide each input by its std
-            zca_whitening=False,  # whitening
+            zca_whitening=True,  # whitening
             rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
             width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
             height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
@@ -107,8 +112,8 @@ rows, cols = 32, 32
 channels = 3
 learning_rate = [0.25, 0.1, 0.05, 0.01]
 epoch_lengths = [200, 50, 50, 50]
-learning_rate = [0.1, 0.01, 0.001, 0.0001]
-epoch_lengths = [200, 50, 50, 50]
+learning_rate = [0.01]
+epoch_lengths = [100]
 
 path="weights.hdf5"
 
