@@ -63,14 +63,14 @@ def load_data():
     X_train = X_train.astype('float32')
     X_test = X_test.astype('float32')
 
-    X_train /= 255 #Normalize
-    X_test /= 255
+    X_train /= 256 #Normalize
+    X_test /= 256
 
     return (X_train, Y_train, X_test, Y_test)
 
 def preprocess_dataset(X,Y,batches):
     datagen = ImageDataGenerator(
-            contrast_stretching=True, adaptive_equalization=True, histogram_equalization=True,
+            contrast_stretching=True, adaptive_equalization=False, histogram_equalization=False,
             featurewise_center=False,  # set input mean to 0 over the dataset
             samplewise_center=False,  # set each sample mean to 0
             featurewise_std_normalization=False,  # divide inputs by std of the dataset
