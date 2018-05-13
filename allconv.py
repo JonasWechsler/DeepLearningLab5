@@ -20,7 +20,7 @@ import os
 import pandas
 import numpy as np
 
-def make_model(weights, lr=0.01, decay=1e-7):
+def make_model(weights=None, lr=0.01, decay=1e-7):
     model = Sequential()
     
     model.add(Conv2D(96, (3, 3), padding = 'same', input_shape=(32, 32, 3)))
@@ -131,6 +131,30 @@ def run(model, epoch_lengths, learning_rates, batches, test_batches):
 
     return history
 
+def param_search(decays, learning_rates):
+    with open('out.txt', 'a') as f:
+        for decay, lr in zip(decays, learning_rates):
+            learning_rate = 0.012
+            epochs = 20
+            model = make_model(path, learning_rate, decay)
+            print(model.summary())
+            history = run(model, [epochs], [learning_rate], batches, test_batches)
+            loss = np.min(history['loss'])
+            acc = np.max(history['acc'])
+            val_loss = np.min(history['val_loss'])
+            val_acc = np.max(history['val_acc'])
+            line = ','.join(map(str,[learning_rate, loss, acc, val_loss, val_acc]))
+            print(line)
+            f.write(line)
+            f.write('\n')
+            f.flush()
+
+def learner():
+    model = make_model()
+    history = run(model, epoch_lengths, learning_rate, batches, test_batches)
+    pandas.DataFrame(history).to_csv("history.csv")
+    model.save('final_model.h5')
+
 
 K.set_image_dim_ordering('tf')
 
@@ -156,36 +180,12 @@ test_batches = datagen.flow(X_test, Y_test, batch_size = len(X_test[0]))
 #for i in range(len(X_test)):
 #    X_test[i] = datagen.standardize(X_test[i])
 
-#model = make_model(path)
-
 for a, b in zip([X_train, Y_train, X_test, Y_test], ['X','y','X_test','y_test']):
     print('{} shape : {}'.format(b, a.shape))
 
-#history = run(model, epoch_lengths, learning_rate, batches, test_batches)
-    
-#print(history)
+#param_search([1e-2, 1e-3, 1e-4, 1e-5, 1e-6], [0.012, 0.012, 0.012, 0.012, 0.012])
+learner()
 
-with open('out.txt', 'a') as f:
-    for decay in [1e-2, 1e-3, 1e-4, 1e-5, 1e-6]:
-        learning_rate = 0.012
-        epochs = 20
-        model = make_model(path, learning_rate, decay)
-        print(model.summary())
-        history = run(model, [epochs], [learning_rate], batches, test_batches)
-        loss = np.min(history['loss'])
-        acc = np.max(history['acc'])
-        val_loss = np.min(history['val_loss'])
-        val_acc = np.max(history['val_acc'])
-        line = ','.join(map(str,[learning_rate, loss, acc, val_loss, val_acc]))
-        #line = '{},{}'.format(learning_rate, ','.join(map(str,[np.max(history[key]) for key in history])))
-        print(line)
-        f.write(line)
-        f.write('\n')
-        f.flush()
-    f.close()
-
-pandas.DataFrame(history).to_csv("history.csv")
-model.save('final_model.h5')
 #def resize(infile):
 #    from PIL import Image
 #    im = Image.open(infile)
