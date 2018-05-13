@@ -20,7 +20,7 @@ import os
 import pandas
 import numpy as np
 
-def make_model(weights):
+def make_model(weights, lr=0.01, decay=1e-7):
     model = Sequential()
     
     model.add(Conv2D(96, (3, 3), padding = 'same', input_shape=(32, 32, 3)))
@@ -46,7 +46,7 @@ def make_model(weights):
     model.add(GlobalAveragePooling2D())
     model.add(Activation('softmax'))
     sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
-    sgd = SGD(lr=0.01, decay=0.001, momentum=0.9)
+    sgd = SGD(lr=lr, decay=decay, momentum=0.9)
 
     #if os.path.isfile(weights):
     #    print("loading weights from checkpoint")
@@ -60,10 +60,6 @@ def make_model(weights):
 def load_data():
     (X_train, y_train), (X_test, y_test) = cifar10.load_data()
     n_classes = len(set(y_train.flatten()))
-    #X_train = X_train[1:1000]
-    #y_train = y_train[1:1000]
-    #X_test = X_test[1:100]
-    #y_test = y_test[1:100]
 
     Y_train = np_utils.to_categorical(y_train, n_classes) # Convert to one-hot vector
     Y_test = np_utils.to_categorical(y_test, n_classes)
@@ -114,7 +110,7 @@ def run(model, epoch_lengths, learning_rates, batches, test_batches):
     
     total_epochs = 0
     iter=0
-    for rate, epochs in zip(learning_rate, epoch_lengths):
+    for rate, epochs in zip(learning_rates, epoch_lengths):
         K.set_value(model.optimizer.lr, rate)
         print(X_train.shape[0], batch_size, X_train.shape[0]//batch_size, len(batches), len(test_batches))
         history_callback = model.fit_generator(batches,
@@ -143,10 +139,10 @@ epochs = 350
 epochs = 1
 rows, cols = 32, 32
 channels = 3
-learning_rate = [0.01, 0.001, 0.0001, 0.00001]
-epoch_lengths = [200, 50, 50, 50]
-#learning_rate = [0.01]
-#epoch_lengths = [100]
+#learning_rate = [0.01, 0.001, 0.0001, 0.00001]
+#epoch_lengths = [200, 50, 50, 50]
+learning_rate = [0.01]
+epoch_lengths = [100]
 
 path="weights.hdf5"
 
@@ -160,15 +156,33 @@ test_batches = datagen.flow(X_test, Y_test, batch_size = len(X_test[0]))
 #for i in range(len(X_test)):
 #    X_test[i] = datagen.standardize(X_test[i])
 
-model = make_model(path)
+#model = make_model(path)
 
 for a, b in zip([X_train, Y_train, X_test, Y_test], ['X','y','X_test','y_test']):
     print('{} shape : {}'.format(b, a.shape))
-print(model.summary())
 
-history = run(model, epoch_lengths, learning_rate, batches, test_batches)
+#history = run(model, epoch_lengths, learning_rate, batches, test_batches)
     
-print(history)
+#print(history)
+
+with open('out.txt', 'a') as f:
+    for decay in [1e-2, 1e-3, 1e-4, 1e-5, 1e-6]:
+        learning_rate = 0.012
+        epochs = 20
+        model = make_model(path, learning_rate, decay)
+        print(model.summary())
+        history = run(model, [epochs], [learning_rate], batches, test_batches)
+        loss = np.min(history['loss'])
+        acc = np.max(history['acc'])
+        val_loss = np.min(history['val_loss'])
+        val_acc = np.max(history['val_acc'])
+        line = ','.join(map(str,[learning_rate, loss, acc, val_loss, val_acc]))
+        #line = '{},{}'.format(learning_rate, ','.join(map(str,[np.max(history[key]) for key in history])))
+        print(line)
+        f.write(line)
+        f.write('\n')
+        f.flush()
+    f.close()
 
 pandas.DataFrame(history).to_csv("history.csv")
 model.save('final_model.h5')
