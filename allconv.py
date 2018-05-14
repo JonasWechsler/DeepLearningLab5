@@ -16,28 +16,28 @@ import os
 import pandas
 import numpy as np
 
-def make_model(weights):
+def make_model(weights, k_i='glorot_uniform', useLSUV=False):
     model = Sequential()
     
-    model.add(Convolution2D(96, 3, 3, border_mode = 'same', input_shape=(32, 32, 3)))
+    model.add(Convolution2D(96, 3, 3, border_mode = 'same', input_shape=(32, 32, 3), init=k_i))
     model.add(Activation('relu'))
-    model.add(Convolution2D(96, 3, 3,border_mode='same'))
+    model.add(Convolution2D(96, 3, 3,border_mode='same', init=k_i))
     model.add(Activation('relu'))
-    model.add(Convolution2D(96, 3, 3, border_mode='same', subsample = (2,2)))
+    model.add(Convolution2D(96, 3, 3, border_mode='same', subsample = (2,2), init=k_i))
     model.add(Dropout(0.5))
     
-    model.add(Convolution2D(192, 3, 3, border_mode = 'same'))
+    model.add(Convolution2D(192, 3, 3, border_mode = 'same', init=k_i))
     model.add(Activation('relu'))
-    model.add(Convolution2D(192, 3, 3,border_mode='same'))
+    model.add(Convolution2D(192, 3, 3,border_mode='same', init=k_i))
     model.add(Activation('relu'))
-    model.add(Convolution2D(192, 3, 3,border_mode='same', subsample = (2,2)))
+    model.add(Convolution2D(192, 3, 3,border_mode='same', subsample = (2,2), init=k_i))
     model.add(Dropout(0.5))
     
-    model.add(Convolution2D(192, 3, 3, border_mode = 'same'))
+    model.add(Convolution2D(192, 3, 3, border_mode = 'same', init=k_i))
     model.add(Activation('relu'))
-    model.add(Convolution2D(192, 1, 1,border_mode='valid'))
+    model.add(Convolution2D(192, 1, 1,border_mode='valid', init=k_i))
     model.add(Activation('relu'))
-    model.add(Convolution2D(10, 1, 1, border_mode='valid'))
+    model.add(Convolution2D(10, 1, 1, border_mode='valid', init=k_i))
     
     model.add(GlobalAveragePooling2D())
     model.add(Activation('softmax'))
@@ -47,9 +47,10 @@ def make_model(weights):
     #if os.path.isfile(weights):
     #    print("loading weights from checkpoint")
     #    model.load_weights(weights)
-    
-    batch_size = 32
-    model = LSUVinit(model, X_train[:batch_size,:,:,:])
+
+    if useLSUV:
+        batch_size = 32
+        model = LSUVinit(model, X_train[:batch_size,:,:,:])
     model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
     return model
 
@@ -75,7 +76,7 @@ def preprocess_dataset(X,Y,batches):
             samplewise_center=False,  # set each sample mean to 0
             featurewise_std_normalization=False,  # divide inputs by std of the dataset
             samplewise_std_normalization=False,  # divide each input by its std
-            zca_whitening=True,  # whitening
+            zca_whitening=False,  # whitening
             rotation_range=0,  # randomly rotate images in the range (degrees, 0 to 180)
             width_shift_range=0.1,  # randomly shift images horizontally (fraction of total width)
             height_shift_range=0.1,  # randomly shift images vertically (fraction of total height)
@@ -106,12 +107,10 @@ def run(model, epoch_lengths, learning_rates):
 K.set_image_dim_ordering('tf')
 
 batch_size = 32
-epochs = 350
-epochs = 1
 rows, cols = 32, 32
 channels = 3
-learning_rate = [0.25, 0.1, 0.05, 0.01]
-epoch_lengths = [200, 50, 50, 50]
+# learning_rate = [0.25, 0.1, 0.05, 0.01]
+# epoch_lengths = [200, 50, 50, 50]
 learning_rate = [0.01]
 epoch_lengths = [100]
 
@@ -119,7 +118,7 @@ path="weights.hdf5"
 
 X_train, Y_train, X_test, Y_test = load_data()
 batches = preprocess_dataset(X_train, Y_train, batch_size)
-model = make_model(path)
+model = make_model(path, 'he_normal')
 
 for a, b in zip([X_train, Y_train, X_test, Y_test], ['X','y','X_test','y_test']):
     print('{} shape : {}'.format(b, a.shape))
