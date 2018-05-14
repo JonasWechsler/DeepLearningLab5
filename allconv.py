@@ -4,7 +4,7 @@ from keras.datasets import cifar10
 #from keras.preprocessing.image import ImageDataGenerator
 from image import ImageDataGenerator
 from keras.models import Sequential
-from keras.layers import Dropout, Activation, Convolution2D, GlobalAveragePooling2D, merge
+from keras.layers import Dropout, Activation, Convolution2D, GlobalAveragePooling2D, merge, BatchNormalization
 from keras.utils import np_utils
 from keras.optimizers import SGD
 from keras import backend as K
@@ -36,6 +36,50 @@ def make_model(weights, k_i='glorot_uniform', useLSUV=False):
     model.add(Convolution2D(192, 3, 3, border_mode = 'same', init=k_i))
     model.add(Activation('relu'))
     model.add(Convolution2D(192, 1, 1,border_mode='valid', init=k_i))
+    model.add(Activation('relu'))
+    model.add(Convolution2D(10, 1, 1, border_mode='valid', init=k_i))
+    
+    model.add(GlobalAveragePooling2D())
+    model.add(Activation('softmax'))
+    sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9)
+
+    #if os.path.isfile(weights):
+    #    print("loading weights from checkpoint")
+    #    model.load_weights(weights)
+
+    if useLSUV:
+        batch_size = 32
+        model = LSUVinit(model, X_train[:batch_size,:,:,:])
+    model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    return model
+
+def make_model_batch_norm(weights, k_i='glorot_uniform', useLSUV=False):
+    model = Sequential()
+    
+    model.add(Convolution2D(96, 3, 3, border_mode = 'same', input_shape=(32, 32, 3), init=k_i))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Convolution2D(96, 3, 3,border_mode='same', init=k_i))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Convolution2D(96, 3, 3, border_mode='same', subsample = (2,2), init=k_i))
+    model.add(Dropout(0.5))
+    
+    model.add(Convolution2D(192, 3, 3, border_mode = 'same', init=k_i))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Convolution2D(192, 3, 3,border_mode='same', init=k_i))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Convolution2D(192, 3, 3,border_mode='same', subsample = (2,2), init=k_i))
+    model.add(Dropout(0.5))
+    
+    model.add(Convolution2D(192, 3, 3, border_mode = 'same', init=k_i))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Convolution2D(192, 1, 1,border_mode='valid', init=k_i))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Convolution2D(10, 1, 1, border_mode='valid', init=k_i))
     
@@ -118,7 +162,7 @@ path="weights.hdf5"
 
 X_train, Y_train, X_test, Y_test = load_data()
 batches = preprocess_dataset(X_train, Y_train, batch_size)
-model = make_model(path, 'he_normal')
+model = make_model_batch_norm(path)
 
 for a, b in zip([X_train, Y_train, X_test, Y_test], ['X','y','X_test','y_test']):
     print('{} shape : {}'.format(b, a.shape))
