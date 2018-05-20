@@ -4,7 +4,7 @@ from keras.datasets import cifar10
 import image
 from image import ImageDataGenerator
 from keras.models import Sequential
-from keras.layers import Dropout, Activation, Conv2D, GlobalAveragePooling2D, merge
+from keras.layers import Dropout, Activation, Conv2D, GlobalAveragePooling2D, merge, BatchNormalization
 from keras.utils import np_utils
 from keras.optimizers import SGD
 from keras import backend as K
@@ -67,25 +67,31 @@ def make_model(settings, X_train=None):
         model.add(Conv2D(96, (3, 3), padding = 'same'))
     else:
         model.add(Conv2D(96, (3, 3), padding = 'same', input_shape=(32, 32, 3)))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Conv2D(96, (3, 3),padding='same'))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Conv2D(96, (3, 3), padding='same', strides = (2,2)))
     model.add(Dropout(0.5))
     
     model.add(Conv2D(192, (3, 3), padding = 'same'))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Conv2D(192, (3, 3),padding='same'))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Conv2D(192, (3, 3),padding='same', strides = (2,2)))
     model.add(Dropout(0.5))
     
     model.add(Conv2D(192, (3, 3), padding = 'same'))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Conv2D(192, (1, 1),padding='valid'))
+    model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(Conv2D(10, (1, 1), padding='valid'))
-    
+
     model.add(GlobalAveragePooling2D())
     model.add(Activation('softmax'))
     sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
