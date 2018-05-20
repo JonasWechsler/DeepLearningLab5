@@ -181,7 +181,7 @@ def run_our_model():
             learning_rates = [0.015],
             decay = 3e-5,
             input_dropout = False,
-            orthonormal_init = True)
+            orthonormal_init = False)
     X_train, Y_train, X_test, Y_test = load_data()
     batches, datagen = preprocess_dataset(X_train, Y_train, settings)
     test_batches = (X_test, Y_test)
