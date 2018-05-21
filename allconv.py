@@ -97,9 +97,9 @@ def make_model(settings, X_train=None):
     sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
     sgd = SGD(lr=settings.learning_rates[0], decay=settings.decay, momentum=0.9)
 
-    if settings.weights_path != None and os.path.isfile(weights):
+    if settings.weights_path != None and settings.load_weights and os.path.isfile(settings.weights_path):
         print("loading weights from checkpoint")
-        model.load_weights(weights)
+        model.load_weights(settings.weights_path)
 
     if settings.orthonormal_init: 
         model = LSUVinit(model, X_train[:settings.batch_size,:,:,:])
@@ -140,7 +140,7 @@ class Settings:
             epoch_lengths=[100],
             learning_rates=[0.01],
             momentum=0.9,
-            weights_path=None,
+            weights_path="weights.hdf5",
             decay=3e-5,
             input_dropout=False,
             orthonormal_init=True,
@@ -148,7 +148,8 @@ class Settings:
         self.batch_size = batch_size
         self.epoch_lengths = epoch_lengths
         self.learning_rates = learning_rates
-        self.weights_path=None
+        self.load_weights=False
+        self.weights_path=weights_path
         self.decay = decay
         self.input_dropout = input_dropout 
         self.momentum = momentum
@@ -172,8 +173,8 @@ def param_search(settings_list, batches, test_batches, X_train):
 
 def learner(settings, batches, test_batches, X_train):
     history = run(settings, batches, test_batches, X_train)
-    pandas.DataFrame(history).to_csv("history-{}-{}-{}.csv".format(settings.epoch_lengths[0], settings.learning_rates[0], decay))
-    model.save('final_model.h5')
+    pandas.DataFrame(history).to_csv("history-{}-{}-{}.csv".format(settings.epoch_lengths[0], settings.learning_rates[0], settings.decay))
+    #model.save('final_model.h5')
 
 def run_our_model():
     settings = Settings(batch_size = 32,
