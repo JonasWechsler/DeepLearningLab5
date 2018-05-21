@@ -28,3 +28,7 @@ http://rodrigob.github.io/are_we_there_yet/build/classification_datasets_results
 ## Requirements
 
 This repo uses [Tensorflow](https://www.tensorflow.org/install/install_windows).
+
+## Running
+
+The main file for this repo is allconv.py
